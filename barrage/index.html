@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>一大波弹幕来袭</title>
+
+    <script src="../js/jquery-3.2.1.min.js"></script>
+
+    <script src="../js/barrage.js"></script>
+
+    <style type="text/css">
+
+        #danmu {
+
+            width: 40px;
+
+            height: 360px;
+
+            background-color: gray;
+
+        }
+
+        #send_box {
+
+            position: absolute;
+
+            top: 500px;
+
+            left: 100px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<script type="text/javascript">
+
+    var ws = new WebSocket("ws://139.224.117.238:9502");//一定要以ws://开头 ，端口是否可用(试验中可以直接关闭防火墙centos7用 systemctl stop firewalld.service ；7以下的用service iptables stop )
+
+    ws.onopen = function () {
+
+    };
+
+    ws.onmessage = function (e) {
+
+        console.log("message:" + e.data);
+
+        var time = $('#danmu').data("nowtime") + 1;
+
+        var text_obj = { text:e.data , color:"red" ,size:"1",position:"0",time:time ,isnew: ""};   //构造加上了innew属性的字符串danmu对象
+
+        $('#danmu').danmu("add_danmu", text_obj);   //向插件中添加该danmu对象
+
+    };
+
+    ws.onerror = function () {
+
+        console.log("error");
+
+    };
+
+    $(document).ready(function () {
+
+        $("#danmu").danmu({
+
+            left: 100,    //区域的起始位置x坐标
+
+            top: 100,  //区域的起始位置y坐标
+
+            height: 360, //区域的高度
+
+            width: 640, //区域的宽度
+
+            zindex: 100, //div的css样式zindex
+
+            speed: 20000, //弹幕速度，飞过区域的毫秒数
+
+            sumtime: 50000, //弹幕运行总时间
+
+            danmuss: {}, //danmuss对象，运行时的弹幕内容
+
+            default_font_color: "#FF0000", //弹幕默认字体颜色
+
+            font_size_small: 16, //小号弹幕的字体大小,注意此属性值只能是整数
+
+            font_size_big: 24, //大号弹幕的字体大小
+
+            opacity: "0.9", //弹幕默认透明度
+
+            top_botton_danmu_time: 6000 //顶端底端弹幕持续时间
+
+        });
+
+        $('#danmu').danmu('danmu_start');
+
+    });
+
+    function send() {
+
+        console.log(document.getElementById('content').value);
+
+        ws.send(JSON.stringify({msg:document.getElementById('content').value,connect:'barrage'})); //将input输入框中的文字发送给后端服务器，让后端服务器广播之
+
+        $("#content").val("");
+
+    }
+
+</script>
+
+<div id="danmu"></div>
+
+<div id="send_box">
+
+    <input id="content" type="text">
+
+    <input type="submit" onclick="send()">
+
+</div>
+
+</body>
+
+</html>

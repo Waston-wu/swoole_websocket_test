@@ -1,20 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title></title>
-  <meta charset="UTF-8">
-  <script type="text/javascript">
-  var exampleSocket = new WebSocket("ws://139.224.117.238:9502");
-  exampleSocket.onopen = function (event) {
-    exampleSocket.send("亲爱的服务器！我连上你啦！"); 
-  };
-  exampleSocket.onmessage = function (event) {
-    console.log(event.data);
-  }
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <title>聊天室</title>
 </head>
 <body>
-<input  type="text" id="content">
-<button  onclick="exampleSocket.send( document.getElementById('content').value )">发送</button>
+<link rel="stylesheet" href="./css/bootstrap.min.css">
+<script src="./js/jquery-3.2.1.min.js"></script>
+<div class="container-fluid">
+    <div class="row-fluid">
+        <div class="col-lg-12" id="msg" style="height:500px;overflow: auto;padding-bottom: 50px;">
+
+        </div>
+        <div class="col-lg-12">
+            <div class="input-group">
+                <input type="text" id="text" class="form-control" placeholder="说点什么吧！...">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="button" onclick="song()">发送</button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
+<script>
+    var username = 'User' + Math.ceil(Math.random() * 1000000);
+    if (username != '')username = prompt('Please enter your name', username);
+    var msg = document.getElementById("msg");
+    var wsServer = 'ws://139.224.117.238:9502?username=' + username;
+    //调用websocket对象建立连接：
+    //参数：ws/wss(加密)：//ip:port （字符串）
+    var websocket = new WebSocket(wsServer);
+    //onopen监听连接打开
+    websocket.onopen = function (evt) {
+        //websocket.readyState 属性：
+        /*
+         CONNECTING    0    The connection is not yet open.
+         OPEN    1    The connection is open and ready to communicate.
+         CLOSING    2    The connection is in the process of closing.
+         CLOSED    3    The connection is closed or couldn't be opened.
+         */
+        // msg.innerHTML = websocket.readyState;
+        websocket.send(JSON.stringify({username: username, msg: username + '进入了房间', connect: true}));
+    };
+
+    function song() {
+        var text = document.getElementById('text').value;
+        document.getElementById('text').value = '';
+        //向服务器发送数据
+        var data = {username: username, msg: text, connect: false}
+        if(text)websocket.send(JSON.stringify(data));
+    }
+    //监听连接关闭
+    websocket.onclose = function (evt) {
+        websocket.send(JSON.stringify({username: username, msg: username + '离开了房间', connect: true}));
+        console.log("Disconnected");
+    };
+
+    //onmessage 监听服务器数据推送
+    websocket.onmessage = function (evt) {
+        msg.innerHTML += evt.data + '<br>';
+        $('#msg').scrollTop($('#msg')[0].scrollHeight);
+//        console.log('Retrieved data from server: ' + evt.data);
+    };
+    //监听连接错误信息
+    websocket.onerror = function (evt, e) {
+        console.log('Error occured: ' + evt.data);
+    };
+
+</script>
 </html>
