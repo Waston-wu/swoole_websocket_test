@@ -7,20 +7,18 @@ $server = new swoole_websocket_server("0.0.0.0", 9502); // 连接swoole
 $server->on('open', function (swoole_websocket_server $server, $request) {
     global $redis;
     $redis->set($request->fd,$request->get['username']);
-
     // 为新加入的用户展示历史消息
     global $server;
     $server->push($request->fd,$redis->get('msg'));
 });
 $server->on('message', function (swoole_websocket_server $server, $frame) {
-    $ip = $_SERVER["REMOTE_ADDR"]; 
     $data = json_decode($frame->data,true);
     if($data['connect']===TRUE)
     {
-        $msg = '<span style="color:#ccc">'.date('Y-m-d H:i:s').' '.$ip.' '.$data['msg']."</span>\n"; // 进入房间提示
+        $msg = '<span style="color:#ccc">'.date('Y-m-d H:i:s').' '.$data['msg']."</span>\n"; // 进入房间提示
     }elseif($data['connect']===FALSE)
     {
-        $msg = ' <span style="color:red">' . $data['username'] . ' '. date('Y-m-d H:i:s') .' '.$ip."：</span><br>{$data['msg']}\n <br>";  // 消息
+        $msg = ' <span style="color:red">' . $data['username'] . ' '. date('Y-m-d H:i:s') ."：</span><br>{$data['msg']}\n <br>";  // 消息
     }elseif($data['connect'] === 'barrage') // 弹幕
     {
         $msg = $data['msg'];
@@ -37,8 +35,14 @@ $server->on('message', function (swoole_websocket_server $server, $frame) {
 $server->on('close', function ($server, $fd) {
     echo "client {$fd} closed\n";
     global $redis;
+    $msg = $redis->get($fd).'离开了房间<br>';
+    foreach ($server->connections as $v) {  // 所有在线用户！
+        if($v == $fd)continue;  // 关闭的用户不发送，不然报错
+        $server->push($v, $redis->get($fd).'离开了房间<br>');
+    }
     $old_msg = $redis->get('msg'); // 获取历史消息
-    $new_msg = $old_msg.$redis->get($fd).'离开了房间<br>'; // 组合新的消息内容
+    $new_msg = $old_msg.$msg; // 组合新的消息内容
+
     $redis->set('msg',$new_msg); // 将新的redis存入redis
     $redis->del($fd);
 });
