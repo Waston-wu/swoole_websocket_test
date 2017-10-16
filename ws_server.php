@@ -35,10 +35,10 @@ $server->on('message', function (swoole_websocket_server $server, $frame) {
 $server->on('close', function ($server, $fd) {
     echo "client {$fd} closed\n";
     global $redis;
-    $msg = $redis->get($fd).'离开了房间<br>';
+    $msg = '<span style="color:#ccc">'. date('Y-m-d H:i:s').' '.$redis->get($fd).'离开了房间</span><br>';
     foreach ($server->connections as $v) {  // 所有在线用户！
         if($v == $fd)continue;  // 关闭的用户不发送，不然报错
-        $server->push($v, $redis->get($fd).'离开了房间<br>');
+        $server->push($v, $msg);
     }
     $old_msg = $redis->get('msg'); // 获取历史消息
     $new_msg = $old_msg.$msg; // 组合新的消息内容
