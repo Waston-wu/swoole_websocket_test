@@ -11,4 +11,5 @@ $redis->connect($config->redis->host,$config->redis->port);
 
 echo "Connection to server sucessfully";
 //查看服务是否运行
+
 echo "Server is running: " . $redis->ping();
