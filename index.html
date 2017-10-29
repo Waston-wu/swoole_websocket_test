@@ -42,7 +42,7 @@
          CLOSED    3    The connection is closed or couldn't be opened.
          */
         // msg.innerHTML = websocket.readyState;
-        websocket.send(JSON.stringify({username: username, msg: username + '进入了房间', connect: true}));
+        websocket.send(JSON.stringify({username: username, msg: username + '进入了房间<br>', connect: true}));
     };
 
     function song() {
@@ -54,13 +54,13 @@
     }
     //监听连接关闭
     websocket.onclose = function (evt) {
-        websocket.send(JSON.stringify({username: username, msg: username + '离开了房间', connect: true}));
+        websocket.send(JSON.stringify({username: username, msg: username + '离开了房间<br>', connect: true}));
         console.log("Disconnected");
     };
 
     //onmessage 监听服务器数据推送
     websocket.onmessage = function (evt) {
-        msg.innerHTML += evt.data + '<br>';
+        msg.innerHTML += evt.data ;
         $('#msg').scrollTop($('#msg')[0].scrollHeight);
 //        console.log('Retrieved data from server: ' + evt.data);
     };

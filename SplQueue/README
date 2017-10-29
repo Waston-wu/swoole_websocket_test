@@ -1,0 +1,1 @@
+# swoole队列，提供2种方式比较 1：swoole提供的SplQueue 2：array数组形式
